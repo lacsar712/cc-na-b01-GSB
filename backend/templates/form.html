@@ -2,16 +2,91 @@
 {% block body %}
 <h1>登记巡检</h1>
 {% if error %}<p class="err">{{ error }}</p>{% endif %}
-<form class="card" method="post">
+<form class="card" method="post" id="reg-form">
   {% csrf_token %}
   <label>航标编号</label>
-  <input name="aid_code" />
+  <input name="aid_code" value="{{ values.aid_code }}" />
   <label>实测光强（坎德拉）</label>
-  <input name="measured_cd" type="number" step="0.1" />
+  <input name="measured_cd" type="number" step="0.1" value="{{ values.measured_cd }}" />
   <label>要求光强</label>
-  <input name="required_cd" type="number" step="0.1" value="1200" />
+  <input name="required_cd" type="number" step="0.1" value="{{ values.required_cd }}" />
   <label>方位偏差（度）</label>
-  <input name="bearing_error_deg" type="number" step="0.1" value="0" />
-  <button type="submit">提交</button>
+  <input name="bearing_error_deg" type="number" step="0.1" value="{{ values.bearing_error_deg }}" />
+  <button type="button" id="preview-btn">判定预览</button>
+
+  <div id="preview-box" style="display:none; margin-top: 14px; border-top: 1px solid #d5e0dc; padding-top: 10px;">
+    <p>即将写入：<strong id="pv-verdict"></strong> · <span id="pv-note"></span></p>
+    <p>凭证编号 <code id="pv-token"></code>（<span id="pv-ttl"></span> 秒内有效）</p>
+    <input type="hidden" name="preview_token" id="pv-token-input" />
+    <label><input type="checkbox" name="confirm" id="pv-confirm" style="width:auto" /> 确认按预览结论写入</label>
+    <button type="submit" id="submit-btn" disabled>确认写入</button>
+    <button type="button" id="close-preview">关闭预览</button>
+  </div>
 </form>
+<p class="err" id="preview-error" style="display:none"></p>
+<script>
+(function () {
+  var form = document.getElementById("reg-form");
+  var box = document.getElementById("preview-box");
+  var errBox = document.getElementById("preview-error");
+  var submitBtn = document.getElementById("submit-btn");
+  var confirmBox = document.getElementById("pv-confirm");
+  var tokenInput = document.getElementById("pv-token-input");
+  var csrf = form.querySelector("[name=csrfmiddlewaretoken]").value;
+
+  function closePreview() {
+    box.style.display = "none";
+    tokenInput.value = "";
+    confirmBox.checked = false;
+    submitBtn.disabled = true;
+  }
+
+  document.getElementById("close-preview").addEventListener("click", closePreview);
+  confirmBox.addEventListener("change", function () {
+    submitBtn.disabled = !confirmBox.checked;
+  });
+
+  // 预览之后再改动任何字段，已拿到的预览即作废，需要重新预览
+  ["aid_code", "measured_cd", "required_cd", "bearing_error_deg"].forEach(function (name) {
+    form.querySelector("[name=" + name + "]").addEventListener("input", closePreview);
+  });
+
+  function showError(msg) {
+    errBox.textContent = msg;
+    errBox.style.display = "block";
+  }
+
+  document.getElementById("preview-btn").addEventListener("click", function () {
+    errBox.style.display = "none";
+    var data = new FormData();
+    ["aid_code", "measured_cd", "required_cd", "bearing_error_deg"].forEach(function (name) {
+      data.append(name, form.querySelector("[name=" + name + "]").value);
+    });
+    fetch("{% url 'preview' %}", {
+      method: "POST",
+      headers: {"X-CSRFToken": csrf},
+      body: data
+    }).then(function (resp) {
+      if (resp.status === 403) {
+        showError("仅巡检员可登记灯光巡检");
+        return null;
+      }
+      return resp.json().then(function (body) {
+        if (!resp.ok) {
+          showError(body.error || "预览失败");
+          return null;
+        }
+        document.getElementById("pv-verdict").textContent = body.verdict;
+        document.getElementById("pv-note").textContent = body.note;
+        document.getElementById("pv-token").textContent = body.token;
+        document.getElementById("pv-ttl").textContent = body.expires_in;
+        tokenInput.value = body.token;
+        box.style.display = "block";
+      });
+    }).catch(function () {
+      showError("预览请求失败，请重试");
+    });
+  });
+})();
+</script>
 {% endblock %}
