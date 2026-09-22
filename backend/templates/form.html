@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>登记巡检</h1>
+<p>填写后先生成判定预览，核对结论并勾选确认才能写入。</p>
 {% if error %}<p class="err">{{ error }}</p>{% endif %}
-<form class="card" method="post">
+<form class="card" method="post" action="{% url 'preview' %}">
   {% csrf_token %}
   <label>航标编号</label>
   <input name="aid_code" />
@@ -12,6 +13,6 @@
   <input name="required_cd" type="number" step="0.1" value="1200" />
   <label>方位偏差（度）</label>
   <input name="bearing_error_deg" type="number" step="0.1" value="0" />
-  <button type="submit">提交</button>
+  <button type="submit">生成预览</button>
 </form>
 {% endblock %}

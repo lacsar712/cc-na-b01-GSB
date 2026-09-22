@@ -47,16 +47,26 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 _url = urlparse(os.environ.get("DATABASE_URL", "postgresql://app:app@localhost:54390/nav_aid"))
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": _url.path.lstrip("/"),
-        "USER": _url.username,
-        "PASSWORD": _url.password,
-        "HOST": _url.hostname,
-        "PORT": _url.port or 5432,
+if _url.scheme.startswith("sqlite"):
+    # sqlite:///相对路径.db 或 sqlite:////绝对路径.db；空路径用内存库
+    _name = _url.path[1:] if _url.path.startswith("/") else _url.path
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": _name or ":memory:",
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": _url.path.lstrip("/"),
+            "USER": _url.username,
+            "PASSWORD": _url.password,
+            "HOST": _url.hostname,
+            "PORT": _url.port or 5432,
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = []
 LANGUAGE_CODE = "zh-hans"

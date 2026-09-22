@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>判定预览</h1>
+<p>以下为即将写入的结论和说明，凭证 {{ ttl }} 秒内有效，核对无误后勾选确认再写入。</p>
+<div class="card">
+  <p>航标编号：{{ token.aid_code }}</p>
+  <p>实测光强 {{ token.measured_cd }}，要求 {{ token.required_cd }}，方位偏差 {{ token.bearing_error_deg }} 度</p>
+  <p class="{% if token.verdict == '合格' %}ok{% else %}bad{% endif %}">{{ token.verdict }} · {{ token.note }}</p>
+  <p>预览凭证编号：<strong>{{ token.code }}</strong></p>
+</div>
+<form class="card" method="post" action="{% url 'create' %}">
+  {% csrf_token %}
+  <input type="hidden" name="aid_code" value="{{ token.aid_code }}" />
+  <input type="hidden" name="measured_cd" value="{{ token.measured_cd }}" />
+  <input type="hidden" name="required_cd" value="{{ token.required_cd }}" />
+  <input type="hidden" name="bearing_error_deg" value="{{ token.bearing_error_deg }}" />
+  <input type="hidden" name="preview_token" value="{{ token.code }}" />
+  <label>
+    <input type="checkbox" name="confirm" style="width:auto" />
+    我已核对预览结论，确认写入
+  </label>
+  <button type="submit">确认写入</button>
+</form>
+<form method="post" action="{% url 'cancel_preview' %}">
+  {% csrf_token %}
+  <input type="hidden" name="preview_token" value="{{ token.code }}" />
+  <button type="submit">取消</button>
+</form>
+{% endblock %}
