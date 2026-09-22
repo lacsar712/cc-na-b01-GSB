@@ -1,0 +1,40 @@
+services:
+  db:
+    image: docker.m.daocloud.io/library/postgres:16-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: nav_aid
+    ports:
+      - "54390:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d nav_aid"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  web:
+    build:
+      context: ./backend
+    ports:
+      - "8190:8000"
+    environment:
+      DATABASE_URL: postgresql://app:app@db:5432/nav_aid
+      DJANGO_SECRET: nav-aid-inspection-dev-secret
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    image: docker.m.daocloud.io/library/nginx:1.27-alpine
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "3190:80"
+    depends_on:
+      - web
+
+volumes:
+  pgdata:

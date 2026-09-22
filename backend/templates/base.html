@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>{% block title %}航标灯光巡检台{% endblock %}</title>
+  <style>
+    body { font-family: "Segoe UI", sans-serif; margin: 0; background: #eef3f1; color: #1b2421; }
+    header { background: #0f3d3e; color: #fff; padding: 14px 24px; display: flex; gap: 16px; align-items: center; }
+    header a { color: #d6f5f2; text-decoration: none; }
+    main { max-width: 880px; margin: 24px auto; padding: 0 16px; }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th, td { border-bottom: 1px solid #d5e0dc; padding: 8px 10px; text-align: left; }
+    .ok { color: #0b6b3a; } .bad { color: #9b1c1c; }
+    form.card { background: #fff; padding: 16px; max-width: 420px; }
+    label { display: block; margin: 10px 0 4px; }
+    input { width: 100%; padding: 8px; box-sizing: border-box; }
+    button { margin-top: 14px; background: #0f3d3e; color: #fff; border: 0; padding: 8px 16px; }
+    .err { color: #9b1c1c; }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>航标灯光巡检台</strong>
+    {% if user.is_authenticated %}
+      <a href="{% url 'list' %}">巡检记录</a>
+      {% if can_write %}<a href="{% url 'create' %}">登记</a>{% endif %}
+      <span style="margin-left:auto">{{ user.username }}</span>
+      <a href="{% url 'logout' %}">退出</a>
+    {% endif %}
+  </header>
+  <main>{% block body %}{% endblock %}</main>
+</body>
+</html>

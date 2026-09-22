@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block body %}
+<form class="card" method="post">
+  {% csrf_token %}
+  <h1>登录</h1>
+  <p>巡检员登记灯光实测，监督员只能查看。</p>
+  {% if error %}<p class="err">{{ error }}</p>{% endif %}
+  <label>用户名</label>
+  <input name="username" value="keeper" />
+  <label>密码</label>
+  <input name="password" type="password" value="light123456" />
+  <button type="submit">登录</button>
+  <p>keeper / light123456 可登记；watch / watch123456 只读</p>
+</form>
+{% endblock %}

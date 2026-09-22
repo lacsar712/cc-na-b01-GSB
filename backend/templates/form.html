@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>登记巡检</h1>
+{% if error %}<p class="err">{{ error }}</p>{% endif %}
+<form class="card" method="post">
+  {% csrf_token %}
+  <label>航标编号</label>
+  <input name="aid_code" />
+  <label>实测光强（坎德拉）</label>
+  <input name="measured_cd" type="number" step="0.1" />
+  <label>要求光强</label>
+  <input name="required_cd" type="number" step="0.1" value="1200" />
+  <label>方位偏差（度）</label>
+  <input name="bearing_error_deg" type="number" step="0.1" value="0" />
+  <button type="submit">提交</button>
+</form>
+{% endblock %}
